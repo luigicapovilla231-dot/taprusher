@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TapRush</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    background: #101014;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* MENU */
+
+#menu {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.logo {
+    font-size: 52px;
+    font-weight: 900;
+    color: #ff3b81;
+    text-shadow:
+        0 0 10px #ff3b81,
+        0 0 30px rgba(255,59,129,.5);
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #888;
+    margin-bottom: 30px;
+}
+
+.statsBox {
+    background: #1b1b20;
+    padding: 18px 35px;
+    border-radius: 18px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+
+.statsBox div {
+    margin: 9px 0;
+    font-size: 18px;
+}
+
+.statsBox span {
+    color: #ff3b81;
+    font-weight: bold;
+}
+
+button {
+    border: none;
+    padding: 16px 50px;
+    border-radius: 15px;
+    background: #ff3b81;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 0 25px rgba(255,59,129,.4);
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(.94);
+}
+
+/* GAME */
+
+#game {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* STATS */
+
+#stats {
+    position: absolute;
+    top: 12px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    z-index: 20;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.stat {
+    background: rgba(25,25,30,.9);
+    padding: 8px 11px;
+    border-radius: 10px;
+}
+
+/* TARGET */
+
+#target {
+    position: absolute;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #ff3b81;
+    box-shadow: 0 0 25px #ff3b81;
+    z-index: 5;
+    transform: scale(1);
+    transition:
+        left .09s,
+        top .09s,
+        width .15s,
+        height .15s,
+        transform .1s;
+    cursor: pointer;
+}
+
+#target:active {
+    transform: scale(.8);
+}
+
+/* BOMB */
+
+#target.bomb {
+    background: #050505;
+    border: 6px solid transparent;
+
+    background-image:
+        linear-gradient(#050505,#050505),
+        conic-gradient(
+            #ff3030 var(--fuse),
+            #555 var(--fuse)
+        );
+
+    background-origin: border-box;
+
+    background-clip:
+        padding-box,
+        border-box;
+
+    box-shadow:
+        0 0 15px #ff2222,
+        inset 0 0 15px #000;
+}
+
+/* PARTICLES */
+
+.particle {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff3b81;
+    pointer-events: none;
+    z-index: 50;
+}
+
+/* SCORE POP */
+
+.scorePop {
+    position: absolute;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 60;
+    animation: scorePop .55s forwards;
+}
+
+@keyframes scorePop {
+
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-45px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* LEVEL UP */
+
+#levelUp {
+    position: absolute;
+    top: 85px;
+    left: 50%;
+
+    transform:
+        translateX(-50%)
+        scale(.5);
+
+    opacity: 0;
+
+    color: #ffd43b;
+    font-size: 30px;
+    font-weight: bold;
+
+    text-shadow:
+        0 0 15px #ffd43b;
+
+    z-index: 80;
+    pointer-events: none;
+}
+
+.levelAnimation {
+    animation: levelAnimation 1s ease-out;
+}
+
+@keyframes levelAnimation {
+
+    0% {
+        transform:
+            translateX(-50%)
+            scale(.5);
+        opacity: 0;
+    }
+
+    30% {
+        transform:
+            translateX(-50%)
+            scale(1.2);
+        opacity: 1;
+    }
+
+    70% {
+        transform:
+            translateX(-50%)
+            scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform:
+            translateX(-50%)
+            scale(1);
+        opacity: 0;
+    }
+}
+
+/* GAME OVER */
+
+#gameOver {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.9);
+
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+
+    z-index: 100;
+}
+
+#gameOver h1 {
+    font-size: 45px;
+    color: #ff3b81;
+    margin: 0 0 10px;
+}
+
+#gameOver p {
+    color: #aaa;
+}
+
+.finalStats {
+    margin: 20px;
+    font-size: 19px;
+    line-height: 1.8;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+
+<div id="menu">
+
+    <div class="logo">
+        TapRush
+    </div>
+
+    <div class="subtitle">
+        How far can you get?
+    </div>
+
+    <div class="statsBox">
+
+        <div>
+            🏆 Best Score:
+            <span id="bestScore">0</span>
+        </div>
+
+        <div>
+            🔥 Highest Level:
+            <span id="bestLevel">1</span>
+        </div>
+
+    </div>
+
+    <!-- FIXED -->
+    <button type="button" onclick="startGame()">
+        START
+    </button>
+
+</div>
+
+
+<!-- GAME -->
+
+<div id="game">
+
+    <div id="stats">
+
+        <div class="stat">
+            Score:
+            <span id="score">0</span>
+        </div>
+
+        <div class="stat">
+            Level:
+            <span id="level">1</span>
+        </div>
+
+        <div class="stat">
+            🔥
+            <span id="combo">0</span>
+        </div>
+
+        <div class="stat">
+            ⏱
+            <span id="time">30</span>
+        </div>
+
+    </div>
+
+    <div id="levelUp">
+        LEVEL UP!
+    </div>
+
+    <div id="target"></div>
+
+
+    <!-- GAME OVER -->
+
+    <div id="gameOver">
+
+        <h1 id="gameOverTitle">
+            GAME OVER
+        </h1>
+
+        <p id="gameOverReason"></p>
+
+        <div class="finalStats">
+
+            <div>
+                Score:
+                <b id="finalScore">0</b>
+            </div>
+
+            <div>
+                Level:
+                <b id="finalLevel">1</b>
+            </div>
+
+            <div>
+                Best Score:
+                <b id="finalBest">0</b>
+            </div>
+
+        </div>
+
+        <!-- FIXED -->
+        <button type="button" onclick="startGame()">
+            PLAY AGAIN
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const menu = document.getElementById("menu");
+const game = document.getElementById("game");
+const target = document.getElementById("target");
+
+const scoreText = document.getElementById("score");
+const comboText = document.getElementById("combo");
+const levelText = document.getElementById("level");
+const timeText = document.getElementById("time");
+
+const bestScoreText = document.getElementById("bestScore");
+const bestLevelText = document.getElementById("bestLevel");
+
+const gameOver = document.getElementById("gameOver");
+const gameOverTitle = document.getElementById("gameOverTitle");
+const gameOverReason = document.getElementById("gameOverReason");
+
+const finalScore = document.getElementById("finalScore");
+const finalLevel = document.getElementById("finalLevel");
+const finalBest = document.getElementById("finalBest");
+
+const levelUp = document.getElementById("levelUp");
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+let score = 0;
+let combo = 0;
+let level = 1;
+let time = 30;
+
+let gameRunning = false;
+
+let gameTimer = null;
+let bombTimer = null;
+let targetTimer = null;
+
+let targetIsBomb = false;
+
+
+/* =========================
+   HIGH SCORES
+========================= */
+
+let bestScore =
+    Number(localStorage.getItem("taprushBestScore")) || 0;
+
+let bestLevel =
+    Number(localStorage.getItem("taprushBestLevel")) || 1;
+
+bestScoreText.textContent = bestScore;
+bestLevelText.textContent = bestLevel;
+
+
+/* =========================
+   AUDIO
+========================= */
+
+let audioContext = null;
+
+function initAudio() {
+
+    if (!audioContext) {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (AudioContext) {
+            audioContext = new AudioContext();
+        }
+    }
+
+    if (
+        audioContext &&
+        audioContext.state === "suspended"
+    ) {
+        audioContext.resume();
+    }
+}
+
+
+function clickSound() {
+
+    initAudio();
+
+    if (!audioContext) return;
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.type = "square";
+
+    oscillator.frequency.setValueAtTime(
+        500,
+        audioContext.currentTime
+    );
+
+    oscillator.frequency.exponentialRampToValueAtTime(
+        850,
+        audioContext.currentTime + .05
+    );
+
+    gain.gain.setValueAtTime(
+        .07,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioContext.currentTime + .06
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime + .06
+    );
+}
+
+
+/* =========================
+   LEVEL REQUIREMENTS
+========================= */
+
+function pointsForLevel(lvl) {
+
+    if (lvl <= 1) return 0;
+
+    const n = lvl - 1;
+
+    return Math.floor(
+        120 +
+        (n - 1) * 80 +
+        Math.pow(n - 1, 2) * 20
+    );
+}
+
+
+/* =========================
+   DIFFICULTY
+========================= */
+
+function difficulty() {
+
+    const size =
+        Math.max(
+            34,
+            68 - (level - 1) * 2
+        );
+
+    const bombChance =
+        Math.min(
+            .10 + (level - 1) * .017,
+            .38
+        );
+
+    const targetLifetime =
+        Math.max(
+            650,
+            1800 - (level - 1) * 60
+        );
+
+    const fuse =
+        Math.max(
+            650,
+            1500 - (level - 1) * 45
+        );
+
+    return {
+        size,
+        bombChance,
+        targetLifetime,
+        fuse
+    };
+}
+
+
+/* =========================
+   START GAME
+========================= */
+
+function startGame() {
+
+    initAudio();
+
+    clearInterval(gameTimer);
+    clearTimeout(bombTimer);
+    clearTimeout(targetTimer);
+
+    score = 0;
+    combo = 0;
+    level = 1;
+    time = 30;
+
+    gameRunning = true;
+    targetIsBomb = false;
+
+    scoreText.textContent = score;
+    comboText.textContent = combo;
+    levelText.textContent = level;
+    timeText.textContent = time;
+
+    menu.style.display = "none";
+    game.style.display = "block";
+
+    gameOver.style.display = "none";
+    target.style.display = "block";
+
+    target.classList.remove("bomb");
+
+    gameTimer = setInterval(() => {
+
+        if (!gameRunning) return;
+
+        time--;
+
+        timeText.textContent = time;
+
+        if (time <= 0) {
+
+            endGame(
+                "TIME'S UP!",
+                "You survived the round."
+            );
+        }
+
+    }, 1000);
+
+    moveTarget();
+}
+
+
+/* =========================
+   MOVE TARGET
+========================= */
+
+function moveTarget() {
+
+    if (!gameRunning) return;
+
+    clearTimeout(bombTimer);
+    clearTimeout(targetTimer);
+
+    targetIsBomb = false;
+
+    target.classList.remove("bomb");
+
+    const diff = difficulty();
+
+    target.style.width = diff.size + "px";
+    target.style.height = diff.size + "px";
+
+    randomPosition();
+
+    if (Math.random() < diff.bombChance) {
+
+        spawnBomb(diff.fuse);
+
+    } else {
+
+        spawnNormalTarget(
+            diff.targetLifetime
+        );
+    }
+}
+
+
+/* =========================
+   NORMAL TARGET
+========================= */
+
+function spawnNormalTarget(lifetime) {
+
+    targetIsBomb = false;
+
+    target.classList.remove("bomb");
+
+    targetTimer = setTimeout(() => {
+
+        if (!gameRunning) return;
+
+        combo = 0;
+
+        comboText.textContent = combo;
+
+        moveTarget();
+
+    }, lifetime);
+}
+
+
+/* =========================
+   BOMB
+========================= */
+
+function spawnBomb(fuseTime) {
+
+    targetIsBomb = true;
+
+    target.classList.add("bomb");
+
+    target.style.setProperty(
+        "--fuse",
+        "100%"
+    );
+
+    const startTime = Date.now();
+
+    function animateFuse() {
+
+        if (
+            !gameRunning ||
+            !targetIsBomb
+        ) {
+            return;
+        }
+
+        const elapsed =
+            Date.now() - startTime;
+
+        const remaining =
+            Math.max(
+                0,
+                1 - elapsed / fuseTime
+            );
+
+        target.style.setProperty(
+            "--fuse",
+            (remaining * 100) + "%"
+        );
+
+        if (remaining > 0) {
+            requestAnimationFrame(
+                animateFuse
+            );
+        }
+    }
+
+    animateFuse();
+
+    bombTimer = setTimeout(() => {
+
+        if (!gameRunning) return;
+
+        targetIsBomb = false;
+
+        target.classList.remove("bomb");
+
+        moveTarget();
+
+    }, fuseTime);
+}
+
+
+/* =========================
+   RANDOM POSITION
+========================= */
+
+function randomPosition() {
+
+    const size = target.offsetWidth;
+
+    const maxX =
+        Math.max(
+            1,
+            window.innerWidth - size
+        );
+
+    const maxY =
+        Math.max(
+            1,
+            window.innerHeight - size - 20
+        );
+
+    const x =
+        Math.random() * maxX;
+
+    const y =
+        70 +
+        Math.random() *
+        Math.max(
+            1,
+            maxY - 70
+        );
+
+    target.style.left = x + "px";
+    target.style.top = y + "px";
+}
+
+
+/* =========================
+   TARGET CLICK
+========================= */
+
+target.addEventListener("click", () => {
+
+    if (!gameRunning) return;
+
+
+    /* BOMB */
+
+    if (targetIsBomb) {
+
+        bombExplosion();
+
+        endGame(
+            "BOOM!",
+            "You tapped a bomb!"
+        );
+
+        return;
+    }
+
+
+    /* NORMAL TARGET */
+
+    clickSound();
+
+    clearTimeout(targetTimer);
+
+    combo++;
+
+    const comboBonus =
+        Math.min(combo, 20);
+
+    const points =
+        10 + comboBonus * 2;
+
+    score += points;
+
+    scoreText.textContent = score;
+    comboText.textContent = combo;
+
+    createParticles();
+
+    createScorePop("+" + points);
+
+
+    /* LEVEL */
+
+    const nextLevel = level + 1;
+
+    if (
+        score >=
+        pointsForLevel(nextLevel)
+    ) {
+
+        level = nextLevel;
+
+        levelText.textContent = level;
+
+        showLevelUp();
+    }
+
+
+    /* CLICK ANIMATION */
+
+    target.style.transform =
+        "scale(1.18)";
+
+    setTimeout(() => {
+
+        if (gameRunning) {
+
+            target.style.transform =
+                "scale(1)";
+        }
+
+    }, 100);
+
+
+    /* NEXT TARGET */
+
+    setTimeout(() => {
+
+        if (gameRunning) {
+            moveTarget();
+        }
+
+    }, 70);
+
+});
+
+
+/* =========================
+   PARTICLES
+========================= */
+
+function createParticles() {
+
+    const rect =
+        target.getBoundingClientRect();
+
+    const cx =
+        rect.left +
+        rect.width / 2;
+
+    const cy =
+        rect.top +
+        rect.height / 2;
+
+    for (let i = 0; i < 10; i++) {
+
+        const particle =
+            document.createElement("div");
+
+        particle.className = "particle";
+
+        particle.style.left = cx + "px";
+        particle.style.top = cy + "px";
+
+        document.body.appendChild(
+            particle
+        );
+
+        const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+        const distance =
+            20 +
+            Math.random() *
+            45;
+
+        const dx =
+            Math.cos(angle) *
+            distance;
+
+        const dy =
+            Math.sin(angle) *
+            distance;
+
+        particle.animate(
+            [
+                {
+                    transform:
+                        "translate(0,0)",
+                    opacity: 1
+                },
+                {
+                    transform:
+                        `translate(${dx}px,${dy}px)`,
+                    opacity: 0
+                }
+            ],
+            {
+                duration: 400,
+                easing: "ease-out"
+            }
+        );
+
+        setTimeout(
+            () => particle.remove(),
+            400
+        );
+    }
+}
+
+
+/* =========================
+   SCORE POP
+========================= */
+
+function createScorePop(text) {
+
+    const rect =
+        target.getBoundingClientRect();
+
+    const pop =
+        document.createElement("div");
+
+    pop.className = "scorePop";
+
+    pop.textContent = text;
+
+    pop.style.left =
+        rect.left + "px";
+
+    pop.style.top =
+        rect.top + "px";
+
+    document.body.appendChild(pop);
+
+    setTimeout(
+        () => pop.remove(),
+        550
+    );
+}
+
+
+/* =========================
+   LEVEL UP
+========================= */
+
+function showLevelUp() {
+
+    levelUp.classList.remove(
+        "levelAnimation"
+    );
+
+    void levelUp.offsetWidth;
+
+    levelUp.textContent =
+        "LEVEL " + level + "!";
+
+    levelUp.classList.add(
+        "levelAnimation"
+    );
+}
+
+
+/* =========================
+   BOMB EXPLOSION
+========================= */
+
+function bombExplosion() {
+
+    target.style.transform =
+        "scale(1.35)";
+
+    target.style.boxShadow =
+        "0 0 60px #ff0000";
+
+    setTimeout(() => {
+
+        target.style.transform =
+            "scale(1)";
+
+        target.style.boxShadow = "";
+
+    }, 250);
+}
+
+
+/* =========================
+   GAME OVER
+========================= */
+
+function endGame(title, reason) {
+
+    if (!gameRunning) return;
+
+    gameRunning = false;
+
+    clearInterval(gameTimer);
+    clearTimeout(bombTimer);
+    clearTimeout(targetTimer);
+
+    targetIsBomb = false;
+
+    target.style.display = "none";
+
+    gameOverTitle.textContent = title;
+    gameOverReason.textContent = reason;
+
+    finalScore.textContent = score;
+    finalLevel.textContent = level;
+
+
+    /* SAVE BEST SCORE */
+
+    if (score > bestScore) {
+
+        bestScore = score;
+
+        localStorage.setItem(
+            "taprushBestScore",
+            bestScore
+        );
+    }
+
+
+    /* SAVE BEST LEVEL */
+
+    if (level > bestLevel) {
+
+        bestLevel = level;
+
+        localStorage.setItem(
+            "taprushBestLevel",
+            bestLevel
+        );
+    }
+
+
+    bestScoreText.textContent =
+        bestScore;
+
+    bestLevelText.textContent =
+        bestLevel;
+
+    finalBest.textContent =
+        bestScore;
+
+
+    gameOver.style.display =
+        "flex";
+}
+
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if (gameRunning) {
+            randomPosition();
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+
+The two biggest errors were:
+
+- "onclick="startGame"" ❌ → "onclick="startGame()"" ✅
+- "/*=======" at the bottom was an unfinished JavaScript comment, so the browser couldn't properly finish reading the script.
+
+I also removed "startBtn" entirely because there was no element with "id="startBtn"" in your HTML.
