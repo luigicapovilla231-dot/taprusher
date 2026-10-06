@@ -522,10 +522,10 @@ button:focus-visible {
     position: absolute;
     color: white;
     font-family: var(--display);
-    font-size: 20px;
+    font-size: 30px;
     pointer-events: none;
     z-index: 60;
-    animation: scorePop 2.0s forwards;
+    animation: scorePop 1.2s forwards;
 }
 
 @keyframes scorePop {
@@ -1495,7 +1495,7 @@ function createParticles() {
             { duration: 400, easing: "ease-out" }
         );
 
-        setTimeout(() => particle.remove(), 1000);
+        setTimeout(() => particle.remove(), 400);
     }
 }
 
@@ -1515,7 +1515,7 @@ function createScorePop(text) {
 
     arena.appendChild(pop);
 
-    setTimeout(() => pop.remove(), 1500);
+    setTimeout(() => pop.remove(), 1000);
 }
 
 
