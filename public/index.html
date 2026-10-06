@@ -468,8 +468,8 @@ button:focus-visible {
     z-index: 5;
     transform: scale(1);
     transition:
-        left .09s,
-        top .09s,
+        left .18s cubic-bezier(.2, .8, .2, 1),
+        top .18s cubic-bezier(.2, .8, .2, 1),
         width .15s,
         height .15s,
         transform .1s;
@@ -525,7 +525,7 @@ button:focus-visible {
     font-size: 30px;
     pointer-events: none;
     z-index: 60;
-    animation: scorePop 1.2s forwards;
+    animation: scorePop 1.8s forwards;
 }
 
 @keyframes scorePop {
@@ -533,8 +533,12 @@ button:focus-visible {
         transform: translateY(0) scale(1);
         opacity: 1;
     }
+    70% {
+        transform: translateY(-35px) scale(1.15);
+        opacity: 1;
+    }
     100% {
-        transform: translateY(-45px) scale(1.2);
+        transform: translateY(-50px) scale(1.2);
         opacity: 0;
     }
 }
@@ -1515,7 +1519,7 @@ function createScorePop(text) {
 
     arena.appendChild(pop);
 
-    setTimeout(() => pop.remove(), 1000);
+    setTimeout(() => pop.remove(), 1800);
 }
 
 
