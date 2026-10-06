@@ -654,6 +654,162 @@ button:focus-visible {
     align-items: center;
 }
 
+
+/* =========================
+   ONLINE LEADERBOARD
+========================= */
+
+.boardBtn {
+    margin-top: 16px;
+}
+
+#submitScore {
+    display: none;
+    gap: 8px;
+    margin-bottom: 22px;
+    width: min(380px, 100%);
+}
+
+#submitScore.show {
+    display: flex;
+}
+
+#submitScore input {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--body);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 12px;
+    padding: 12px 14px;
+    user-select: text;
+}
+
+#submitScore input:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+#submitScore button {
+    padding: 12px 18px;
+    font-size: 14px;
+    box-shadow: 0 4px 0 #b0124f;
+}
+
+#submitScore button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.submitStatus {
+    min-height: 18px;
+    margin: -12px 0 18px;
+    font-size: 14px;
+    color: var(--gold);
+}
+
+#leaderboard {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(8,7,12,.92);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+#leaderboard.show {
+    display: flex;
+    animation: rise .35s ease-out;
+}
+
+.boardPanel {
+    width: min(440px, 100%);
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.boardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--panel-edge);
+}
+
+.boardHead h2 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: normal;
+    font-size: 24px;
+    color: var(--pink);
+    text-shadow: 0 0 16px var(--pink-glow);
+}
+
+#boardList {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    overflow-y: auto;
+}
+
+#boardList li {
+    display: grid;
+    grid-template-columns: 34px 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 20px;
+}
+
+#boardList li.mine {
+    background: rgba(255,59,129,.12);
+}
+
+#boardList .rank {
+    font-family: var(--display);
+    color: var(--muted);
+}
+
+#boardList li:nth-child(1) .rank { color: var(--gold); }
+#boardList li:nth-child(2) .rank { color: #d8d4e8; }
+#boardList li:nth-child(3) .rank { color: #e08a4a; }
+
+#boardList .who {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#boardList .lvl {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+#boardList .pts {
+    font-family: var(--display);
+    color: var(--gold);
+    min-width: 60px;
+    text-align: right;
+}
+
+#boardList .empty {
+    display: block;
+    text-align: center;
+    color: var(--muted);
+    padding: 26px 20px;
+}
+
 /* =========================
    MOBILE: HUD on top, arena below
 ========================= */
@@ -731,6 +887,8 @@ button:focus-visible {
     </div>
 
     <button type="button" onclick="startGame()">START</button>
+
+    <button type="button" class="ghostBtn boardBtn" onclick="openLeaderboard()">🏆 Leaderboard</button>
 
     <div class="howTo">
         <span><i class="dot"></i> Tap for points</span>
@@ -824,8 +982,16 @@ button:focus-visible {
                 </div>
             </div>
 
+            <form id="submitScore" onsubmit="submitScore(event)">
+                <input id="playerName" type="text" maxlength="16" placeholder="Your name" autocomplete="nickname" required>
+                <button type="submit" id="submitBtn">SUBMIT</button>
+            </form>
+
+            <div class="submitStatus" id="submitStatus"></div>
+
             <div class="overActions">
                 <button type="button" onclick="startGame()">PLAY AGAIN</button>
+                <button type="button" class="ghostBtn" onclick="openLeaderboard()">Ranks</button>
                 <button type="button" class="ghostBtn" onclick="quitGame()">Menu</button>
             </div>
 
@@ -833,6 +999,19 @@ button:focus-visible {
 
     </main>
 
+</div>
+
+
+<!-- ONLINE LEADERBOARD -->
+
+<div id="leaderboard" onclick="if (event.target === this) closeLeaderboard()">
+    <div class="boardPanel" role="dialog" aria-labelledby="boardTitle">
+        <div class="boardHead">
+            <h2 id="boardTitle">TOP 20</h2>
+            <button type="button" class="ghostBtn" onclick="closeLeaderboard()">Close</button>
+        </div>
+        <ol id="boardList"></ol>
+    </div>
 </div>
 
 
@@ -1426,8 +1605,128 @@ function endGame(title, reason) {
     finalBest.textContent = bestScore;
     hudBest.textContent = bestScore;
 
+    showSubmitForm();
+
     gameOver.classList.add("show");
 }
+
+
+/* =========================
+   ONLINE LEADERBOARD
+========================= */
+
+const leaderboard = document.getElementById("leaderboard");
+const boardList = document.getElementById("boardList");
+const submitForm = document.getElementById("submitScore");
+const playerName = document.getElementById("playerName");
+const submitBtn = document.getElementById("submitBtn");
+const submitStatus = document.getElementById("submitStatus");
+
+let lastSubmittedId = null;
+
+playerName.value = localStorage.getItem("taprushName") || "";
+
+function renderBoard(entries) {
+
+    boardList.innerHTML = "";
+
+    if (!entries.length) {
+        boardList.innerHTML = '<li class="empty">No scores yet. Be the first!</li>';
+        return;
+    }
+
+    entries.forEach((entry, i) => {
+
+        const li = document.createElement("li");
+        if (entry.id === lastSubmittedId) li.classList.add("mine");
+
+        const rank = document.createElement("span");
+        rank.className = "rank";
+        rank.textContent = i + 1;
+
+        const who = document.createElement("span");
+        who.className = "who";
+        who.textContent = entry.name;
+
+        const lvl = document.createElement("span");
+        lvl.className = "lvl";
+        lvl.textContent = "Lv " + entry.level;
+
+        const pts = document.createElement("span");
+        pts.className = "pts";
+        pts.textContent = entry.score;
+
+        li.append(rank, who, lvl, pts);
+        boardList.appendChild(li);
+    });
+}
+
+async function openLeaderboard() {
+
+    leaderboard.classList.add("show");
+    boardList.innerHTML = '<li class="empty">Loading…</li>';
+
+    try {
+        const res = await fetch("/api/scores");
+        if (!res.ok) throw new Error();
+        renderBoard(await res.json());
+    } catch {
+        boardList.innerHTML = '<li class="empty">Could not load the leaderboard.</li>';
+    }
+}
+
+function closeLeaderboard() {
+
+    leaderboard.classList.remove("show");
+}
+
+function showSubmitForm() {
+
+    submitStatus.textContent = "";
+    submitBtn.disabled = false;
+    submitForm.classList.toggle("show", score > 0);
+}
+
+async function submitScore(event) {
+
+    event.preventDefault();
+
+    const name = playerName.value.trim();
+    if (!name) return;
+
+    localStorage.setItem("taprushName", name);
+
+    submitBtn.disabled = true;
+    submitStatus.textContent = "Submitting…";
+
+    try {
+        const res = await fetch("/api/scores", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, score, level })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed");
+
+        lastSubmittedId = data.id;
+        submitForm.classList.remove("show");
+
+        const rank = data.top.findIndex(e => e.id === data.id);
+        submitStatus.textContent = rank >= 0
+            ? "You're #" + (rank + 1) + " on the leaderboard!"
+            : "Score submitted!";
+
+    } catch (err) {
+        submitBtn.disabled = false;
+        submitStatus.textContent = "Could not submit score. Try again.";
+    }
+}
+
+document.addEventListener("keydown", e => {
+
+    if (e.key === "Escape") closeLeaderboard();
+});
 
 
 /* =========================
